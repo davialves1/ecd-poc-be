@@ -1,23 +1,14 @@
 package com.example.pocbackend.controller;
 
-import java.io.File;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileOwnerAttributeView;
-import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.UserPrincipal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import org.apache.commons.codec.digest.XXHash32;
+import java.util.Iterator;
 import org.apache.poi.hpsf.NoPropertySetStreamException;
 import org.apache.poi.hpsf.PropertySet;
 import org.apache.poi.hpsf.SummaryInformation;
@@ -30,12 +21,9 @@ import org.apache.poi.poifs.filesystem.DocumentEntry;
 import org.apache.poi.poifs.filesystem.DocumentInputStream;
 import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -61,21 +49,19 @@ public class FileUploadController {
 		Path path = Paths.get("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx");
 		file.transferTo(path);
 		FileInputStream inputStream = new FileInputStream(path.toFile());
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
 		MetaDataDTO metaDataDTO;
 
-		// We are checking the file format OLE2(newer) or OOXML(older)
-		if (FileMagic.valueOf(inputStream).equals(FileMagic.OOXML)) {
-			POIFSFileSystem poifs = new POIFSFileSystem(inputStream);
-			DirectoryEntry dir = poifs.getRoot();
-			DocumentEntry siEntry =      (DocumentEntry)dir.getEntry(SummaryInformation.DEFAULT_STREAM_NAME);
+		// Check the file format OLE2(newer) or OOXML(older)
+		if (FileMagic.valueOf(bufferedInputStream).equals(FileMagic.OLE2)) {
+			POIFSFileSystem poifsFileSystem = new POIFSFileSystem(bufferedInputStream);
+			DirectoryEntry dir = poifsFileSystem.getRoot();
+			DocumentEntry siEntry = (DocumentEntry)dir.getEntry(SummaryInformation.DEFAULT_STREAM_NAME);
 			DocumentInputStream dis = new DocumentInputStream(siEntry);
 			PropertySet ps = new PropertySet(dis);
 			SummaryInformation si = new SummaryInformation(ps);
-			String author = si.getAuthor();
 			inputStream.close();
-			System.out.println("Author: " + author);
-			System.out.println("Summary Information: " + si);
 			metaDataDTO = new MetaDataDTO(
 				file.getOriginalFilename(),
 				formatDate(si.getCreateDateTime()),
@@ -83,9 +69,8 @@ public class FileUploadController {
 				si.getAuthor()
 			);
 		} else {
-			OPCPackage opcPackage = OPCPackage.open(inputStream);
+			OPCPackage opcPackage = OPCPackage.open(bufferedInputStream);
 			PackageProperties props = opcPackage.getPackageProperties();
-			System.out.println(props.toString());
 			metaDataDTO = new MetaDataDTO(
 				file.getOriginalFilename(),
 				formatDate(props.getCreatedProperty().orElse(new Date())),
@@ -94,10 +79,7 @@ public class FileUploadController {
 			);
 			opcPackage.close();
 		}
-
-		readExcelFile();
-		return new ResponseEntity<MetaDataDTO>(metaDataDTO, HttpStatus.OK);
-
+		return new ResponseEntity<>(metaDataDTO, HttpStatus.OK);
 	}
 
 	public String formatDate(Date date) {
@@ -105,25 +87,23 @@ public class FileUploadController {
 		return dateFormat.format(date);
 	}
 
-	public void readExcelFile() throws IOException {
-		FileInputStream inputStream = new FileInputStream(new File("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx"));
-		Workbook workbook = WorkbookFactory.create(inputStream);
-		Sheet sheet = workbook.getSheetAt(0);
-		String header = sheet.getHeader().toString();
-		Integer firstRowNumber = sheet.getFirstRowNum();
-		Integer lastRowNumber = sheet.getLastRowNum();
-		Row row = sheet.getRow(0);
-
-//		Log values
-		System.out.println("-------------------");
-		System.out.println("sheet - " + sheet);
-		System.out.println("-------------------");
-		System.out.println("header - " + header.toString());
-		System.out.println("-------------------");
-		System.out.println("firstRowNumber - " + firstRowNumber);
-		System.out.println("-------------------");
-		System.out.println("lastRowNumber - " + lastRowNumber);
-		System.out.println("-------------------");
-		System.out.println("row - " + row.getCell(0));
+	public void printRow(Sheet sheet) {
+		Iterator<Row> iterator = sheet.rowIterator();
+		while (iterator.hasNext()) {
+			Row row = iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+			while (cellIterator.hasNext()) {
+				Cell cell = cellIterator.next();
+				switch (cell.getCellType()) {
+					case STRING:
+						System.out.println(cell.getStringCellValue());
+						break;
+					case NUMERIC:
+						System.out.println((long)cell.getNumericCellValue());
+						break;
+					default: break;
+				}
+			}
+		}
 	}
 }

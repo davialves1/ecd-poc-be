@@ -46,7 +46,7 @@ public class FileUploadController {
 	@PostMapping("/upload")
 	public ResponseEntity<MetaDataDTO> uploadFile(MultipartFile file)
 		throws IOException, InvalidFormatException, NoPropertySetStreamException, UnexpectedPropertySetTypeException {
-		Path path = Paths.get("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx");
+		Path path = Paths.get("file.xlsx");
 		file.transferTo(path);
 		FileInputStream inputStream = new FileInputStream(path.toFile());
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);

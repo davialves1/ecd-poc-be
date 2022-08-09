@@ -32,7 +32,7 @@ public class ReadFileController {
 	}
 
 	public Sheet readExcelFile() throws IOException {
-		FileInputStream inputStream = new FileInputStream("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx");
+		FileInputStream inputStream = new FileInputStream("file.xlsx");
 		Workbook workbook = WorkbookFactory.create(inputStream);
 		return workbook.getSheetAt(0);
 	}

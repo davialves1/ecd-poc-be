@@ -7,8 +7,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import org.apache.poi.ss.formula.functions.Column;
-import org.apache.poi.ss.formula.functions.NumericFunction;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -30,7 +28,7 @@ public class UpdateValueController {
 	@PutMapping("/update-value")
 	public ResponseEntity<HttpResponse> updateValue(@RequestBody CellUpdateDTO cellUpdateDTO) throws IOException {
 
-		FileInputStream inputStream = new FileInputStream("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx");
+		FileInputStream inputStream = new FileInputStream("file.xlsx");
 		Workbook workbook = WorkbookFactory.create(inputStream);
 		Sheet sheet = workbook.getSheetAt(0);
 		Row row = sheet.getRow(cellUpdateDTO.getId());
@@ -52,7 +50,7 @@ public class UpdateValueController {
 			cell.setCellValue((cellUpdateDTO.newValue));
 		}
 
-		FileOutputStream fileOutputStream = new FileOutputStream("/Users/davialves/Desktop/Volkswagen/ECD/poc-backend/file.xlsx");
+		FileOutputStream fileOutputStream = new FileOutputStream("file.xlsx");
 		workbook.write(fileOutputStream);
 		inputStream.close();
 		fileOutputStream.close();

@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.pocbackend.model.ErrorsDTO;
 import com.example.pocbackend.model.FileDTO;
 import com.example.pocbackend.model.RowDataDTO;
 
@@ -62,6 +63,9 @@ public class ReadFileController {
 					}
 					if (columnMap.get("Market") == cell.getColumnIndex()) {
 						rowDataDTO.setMarket(cell.getStringCellValue());
+						if (cell.getStringCellValue().equalsIgnoreCase("usa")) {
+							rowDataDTO.getErrors().put("market", "Market Dummy USA Error");
+						}
 					}
 					if (columnMap.get("Price") == cell.getColumnIndex()) {
 						rowDataDTO.setPrice((long)cell.getNumericCellValue());

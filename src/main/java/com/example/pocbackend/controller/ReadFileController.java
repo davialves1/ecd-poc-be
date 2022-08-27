@@ -13,7 +13,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.eventusermodel.XSSFReader.SheetIterator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -43,12 +42,13 @@ public class ReadFileController {
 		return new ResponseEntity<>(dynamicFileDTO, HttpStatus.OK);
 	}
 
-	private List<Map<String, String>> getDataFromSheets(Sheet sheet) {
+	public List<Map<String, String>> getDataFromSheets(Sheet sheet) {
 		Map<Integer, String> columnMap = createColumnMapString(sheet);
 		List<Map<String, String>> allRowValues = new ArrayList<>();
 		Iterator<Row> rowIterator = sheet.rowIterator();
 		while (rowIterator.hasNext()) {
 			Row row = rowIterator.next();
+			if (row.getRowNum() > 0) {
 			Iterator<Cell> cellIterator = row.cellIterator();
 			Map<String, String> rowValues = new HashMap<>();
 			while (cellIterator.hasNext()) {
@@ -68,8 +68,7 @@ public class ReadFileController {
 					}
 				}
 			}
-			if (row.getRowNum() > 0) {
-				allRowValues.add(rowValues);
+			allRowValues.add(rowValues);
 			}
 		}
 		return allRowValues;
@@ -90,7 +89,7 @@ public class ReadFileController {
 	}
 
 
-	private Map<Integer, String> createColumnMapString(Sheet sheet) {
+	public Map<Integer, String> createColumnMapString(Sheet sheet) {
 		Map<Integer, String> columnMap = new HashMap<>();
 		Row headerRow = sheet.getRow(0);
 		int index = 0;
@@ -100,7 +99,7 @@ public class ReadFileController {
 		return columnMap;
 	}
 
-	private Map<String, Integer> createColumnMap(Sheet sheet) {
+	public Map<String, Integer> createColumnMap(Sheet sheet) {
 		Map<String, Integer> columnMap = new HashMap<>();
 		Row headerRow = sheet.getRow(0);
 		int index = 0;

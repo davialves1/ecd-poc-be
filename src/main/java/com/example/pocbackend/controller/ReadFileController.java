@@ -23,9 +23,10 @@ import com.example.pocbackend.model.FileDTO;
 import com.example.pocbackend.model.RowDataDTO;
 
 @RestController
+@CrossOrigin(origins = "*")
 public class ReadFileController {
 
-	@CrossOrigin
+	@CrossOrigin(origins = "*")
 	@GetMapping("/read-file-dynamic")
 	public ResponseEntity<DynamicFileDTO> readDynamicFile() throws IOException {
 		Iterator<Sheet> sheetIterator = getCurrentSheet().sheetIterator();
